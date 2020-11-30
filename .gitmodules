@@ -4,3 +4,6 @@
 [submodule "hardfloat"]
 	path = hardfloat
 	url = https://github.com/ucb-bar/berkeley-hardfloat.git
+[submodule "posit_temp"]
+	path = posit_temp
+	url = https://github.com/sdcioc/PositChisel.git
