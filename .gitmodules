@@ -7,3 +7,6 @@
 [submodule "posit_temp"]
 	path = posit_temp
 	url = https://github.com/sdcioc/PositChisel.git
+[submodule "posit"]
+	path = posit
+	url = https://github.com/sdcioc/PositChisel.git
