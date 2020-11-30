@@ -84,4 +84,4 @@ class bgemmRoot_positDF(PtrsIn : Seq[Int] = List (32, 32, 32), ValsIn : Seq[Int]
 //   val compiledStuff = compileResult.getEmittedCircuit
 //   verilogWriter.write(compiledStuff.value)
 //   verilogWriter.close()
-}
+// }
