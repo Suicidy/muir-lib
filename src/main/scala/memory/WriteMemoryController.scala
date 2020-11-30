@@ -62,7 +62,8 @@ class WriteTableEntry(id: Int)(implicit p: Parameters) extends WriteEntryIO( )(p
 
   // Is the request valid and request to memory
   val ReqValid   = RegInit(false.B)
-  val ReqAddress = RegInit(0.U(xlen.W))
+  // val ReqAddress = RegInit(0.U(xlen.W))
+  val ReqAddress = RegInit(0.U(ylen.W))
 
   // Incoming data valid and data operand.
   val DataValid  = RegInit(false.B)

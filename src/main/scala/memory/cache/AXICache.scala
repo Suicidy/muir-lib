@@ -15,13 +15,13 @@ trait HasCacheAccelParams extends HasAccelParams with HasAccelShellParams {
 
   val nWays = accelParams.nways
   val nSets = accelParams.nsets
-  val bBytes = accelParams.cacheBlockBytes
-  val bBits = bBytes << 3
+  val bBytes = accelParams.cacheBlockBytes // 4 block; one block = 4 bytes --> bBytes = 16 Bytes
+  val bBits = bBytes << 3 //16*8 = 128 bits
   val blen = log2Ceil(bBytes)
   val slen = log2Ceil(nSets)
   val taglen = xlen - (slen + blen)
-  val nWords = bBits / xlen
-  val wBytes = xlen / 8
+  val nWords = bBits / xlen // 128/32 = 4 words
+  val wBytes = xlen / 8 // 32/8 = 4Bytes
   val byteOffsetBits = log2Ceil(wBytes)
   val dataBeats = bBits / memParams.dataBits
 }
@@ -341,6 +341,7 @@ class SimpleCache(val ID: Int = 0, val debug: Boolean = false)(implicit val p: P
     is(s_flush_IDLE) {
       when(io.cpu.flush) {
         flush_state := s_flush_START
+        io.cpu.flush_done := false.B
         flush_mode := true.B
       }
     }

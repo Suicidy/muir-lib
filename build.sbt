@@ -47,6 +47,7 @@ def dependOnIoTesters(prj: Project) = {
     )
 }
 
+lazy val posit = (project in file("posit"))
 
 lazy val `api-config-chipsalliance` = (project in file("api-config-chipsalliance/build-rules/sbt"))
   .settings(commonSettings)
@@ -57,6 +58,8 @@ lazy val hardfloat  = dependOnChisel(project)
 
 lazy val dandelion= dependOnChisel(project in file("."))
   .settings(commonSettings, chipSettings)
+  .aggregate(posit)
+  .dependsOn(posit)
   .dependsOn(`api-config-chipsalliance` % "compile-internal;test-internal")
   .dependsOn(hardfloat % "compile-internal;test-internal")
   .settings(

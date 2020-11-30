@@ -39,7 +39,7 @@ class cilk_for_test01Main1(tiles: Int)(implicit p: Parameters)
   }
 
   val TC = Module(new TaskController(List(32, 32, 32), List(), 1, numChild = NumTiles))
-  val CacheArb = Module(new MemArbiter(NumTiles + 2))
+  val CacheArb = Module(new MemArbiter(NumTiles + 1))
 
 
   // Merge the memory interfaces and connect to the stack memory

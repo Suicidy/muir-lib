@@ -42,6 +42,8 @@ class FPComputeNode(NumOuts: Int, ID: Int, opCode: String)
   //  override val printfSigil = "Node (COMP - " + opCode + ") ID: " + ID + " "
   val (cycleCount, _) = Counter(true.B, 32 * 1024)
 
+  val FU = Module(new FPUALU(xlen, opCode, t))
+
   /*===========================================*
    *            Registers                      *
    *===========================================*/
@@ -53,23 +55,27 @@ class FPComputeNode(NumOuts: Int, ID: Int, opCode: String)
   val right_R = RegInit(DataBundle.default)
   val right_valid_R = RegInit(false.B)
 
-  val task_ID_R = RegNext(next = enable_R.taskID)
 
   //Output register
-  val out_data_R = RegInit(DataBundle.default)
 
   val s_IDLE :: s_COMPUTE :: Nil = Enum(2)
   val state = RegInit(s_IDLE)
 
+  // val out_data_R = RegInit(DataBundle.default)
+  val out_data_R = RegNext(Mux(enable_R.control, FU.io.out, 0.U), init = 0.U)
 
-  val predicate = left_R.predicate & right_R.predicate// & IsEnable()
+  // val predicate = left_R.predicate & right_R.predicate// & IsEnable()
+  val predicate = Mux(enable_valid_R, enable_R.control ,io.enable.bits.control)
+
+  // val task_ID_R = RegNext(next = enable_R.taskID)
+  val taskID = Mux(enable_valid_R, enable_R.taskID ,io.enable.bits.taskID)
 
   /*===============================================*
    *            Latch inputs. Wire up output       *
    *===============================================*/
 
   //Instantiate ALU with selected code. IEEE ALU. IEEE in/IEEE out
-  val FU = Module(new FPUALU(xlen, opCode, t))
+
   FU.io.in1 := left_R.data
   FU.io.in2 := right_R.data
 
@@ -86,17 +92,18 @@ class FPComputeNode(NumOuts: Int, ID: Int, opCode: String)
   }
 
   // Wire up Outputs
-  for (i <- 0 until NumOuts) {
-    //io.Out(i).bits.data := FU.io.out
-    //io.Out(i).bits.predicate := predicate
-    // The taskID's should be identical except in the case
-    // when one input is tied to a constant.  In that case
-    // the taskID will be zero.  Logical OR'ing the IDs
-    // Should produce a valid ID in either case regardless of
-    // which input is constant.
-    //io.Out(i).bits.taskID := left_R.taskID | right_R.taskID
-    io.Out(i).bits := out_data_R
-  }
+  // for (i <- 0 until NumOuts) {
+  //   //io.Out(i).bits.data := FU.io.out
+  //   //io.Out(i).bits.predicate := predicate
+  //   // The taskID's should be identical except in the case
+  //   // when one input is tied to a constant.  In that case
+  //   // the taskID will be zero.  Logical OR'ing the IDs
+  //   // Should produce a valid ID in either case regardless of
+  //   // which input is constant.
+  //   //io.Out(i).bits.taskID := left_R.taskID | right_R.taskID
+  //   io.Out(i).bits := out_data_R
+  // }
+  io.Out.foreach(_.bits := DataBundle(out_data_R, taskID, predicate))
 
   /*============================================*
    *            State Machine                   *
@@ -106,12 +113,15 @@ class FPComputeNode(NumOuts: Int, ID: Int, opCode: String)
       when(enable_valid_R) {
         when(left_valid_R && right_valid_R) {
           ValidOut()
+          io.Out.foreach(_.bits := DataBundle(FU.io.out, taskID, predicate))
           io.Out.map(_.valid) foreach(_ := true.B)
-          when(enable_R.control) {
-            out_data_R.data := FU.io.out
-            out_data_R.predicate := predicate
-            out_data_R.taskID := left_R.taskID | right_R.taskID | enable_R.taskID
-          }
+          left_valid_R := false.B
+          right_valid_R := false.B
+          // when(enable_R.control) {
+            // out_data_R.data := FU.io.out
+            // out_data_R.predicate := predicate
+            // out_data_R.taskID := left_R.taskID | right_R.taskID | enable_R.taskID
+          // }
           state := s_COMPUTE
         }
       }
@@ -121,17 +131,16 @@ class FPComputeNode(NumOuts: Int, ID: Int, opCode: String)
         // Reset data
         //left_R := DataBundle.default
         //right_R := DataBundle.default
-        left_valid_R := false.B
-        right_valid_R := false.B
         //Reset state
+        out_data_R := 0.U
         state := s_IDLE
         //Reset output
-        out_data_R.predicate := false.B
+        // out_data_R.predicate := false.B
         Reset()
-        if (log) {
-          printf("[LOG] " + "[" + module_name + "] " + "[TID->%d] "
-            + node_name + ": Output fired @ %d, Value: %x\n", task_ID_R, cycleCount, FU.io.out)
-        }
+        // if (log) {
+        //   printf("[LOG] " + "[" + module_name + "] " + "[TID->%d] "
+        //     + node_name + ": Output fired @ %d, Value: %x\n", task_ID_R, cycleCount, FU.io.out)
+        // }
       }
     }
   }

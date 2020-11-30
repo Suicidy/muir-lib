@@ -92,7 +92,8 @@ object AllocaResp {
 //  node : dataflow node id to return data to
 class ReadReq(implicit p: Parameters)
   extends RouteID {
-  val address = UInt(xlen.W)
+  // val address = UInt(xlen.W)
+  val address = UInt(ylen.W)
   val taskID = UInt(tlen.W)
   val Typ = UInt(8.W)
 
@@ -146,7 +147,8 @@ object ReadResp {
 // Mask indicates which bytes to update.
 class WriteReq(implicit p: Parameters)
   extends RouteID {
-  val address = UInt((xlen - 10).W)
+  // val address = UInt((xlen - 10).W)
+  val address = UInt((ylen).W)
   val data = UInt(xlen.W)
   val mask = UInt((xlen / 8).W)
   val taskID = UInt(tlen.W)
@@ -198,7 +200,8 @@ object FUResp {
 }
 
 class MemReq(implicit p: Parameters) extends AccelBundle()(p) {
-  val addr = UInt(xlen.W)
+  // val addr = UInt(xlen.W)
+  val addr = UInt(ylen.W)
   val data = UInt(xlen.W)
   val mask = UInt((xlen / 8).W)
   val tag = UInt((List(1, mshrLen).max).W)

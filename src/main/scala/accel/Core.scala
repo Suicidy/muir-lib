@@ -163,5 +163,4 @@ class Core(cNum: Int, sNum: Int)(implicit p: Parameters) extends CoreT(cNum, sNu
   io.stat(2).bits.predicate := true.B
 
   io.cache.abort := false.B
-
 }

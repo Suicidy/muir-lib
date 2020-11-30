@@ -20,7 +20,7 @@ case class AXIParams(
   val strbBits = dataBits / 8
   val sizeBits = 3
   val burstBits = 2
-  val lockBits = 2
+  val lockBits = 1
   val cacheBits = 4
   val protBits = 3
   val qosBits = 4

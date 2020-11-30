@@ -172,10 +172,10 @@ class WithTestConfig(vcrParams: DandelionDCRParams = DandelionDCRParams(),
                       hostParams: AXIParams = AXIParams(
                         addrBits = 16, dataBits = 32, idBits = 13, lenBits = 4),
                       memParams: AXIParams = AXIParams(
-                        addrBits = 32, dataBits = 32, userBits = 5,
-                        lenBits = 4, // limit to 16 beats, instead of 256 beats in AXI4
+                        addrBits = 18, dataBits = 32, userBits = 5,
+                        lenBits = 8, // limit to 16 beats, instead of 256 beats in AXI4
                         coherent = true),
-                      nastiParams: NastiParameters = NastiParameters(dataBits = 32, addrBits = 32, idBits = 13))
+                      nastiParams: NastiParameters = NastiParameters(dataBits = 32, addrBits = 18, idBits = 13))
   extends Config((site, here, up) => {
     // Core
     case DCRKey => vcrParams

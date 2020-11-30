@@ -38,13 +38,14 @@ class FPDivNodeTester(c: FPDivSqrtNode) extends PeekPokeTester(c) {
     step(1)
     step(1)
     print(s"t: ${t} io.field0: ${peek(c.io.FUReq.bits.data("field0"))} io.field1: ${peek(c.io.FUReq.bits.data("field1"))} io.field2: ${peek(c.io.FUReq.bits.data("field2"))} \n")
-    poke(c.io.FUResp.data,100)
+    // poke(c.io.FUResp.data,100)
     poke(c.io.FUResp.valid,true)
 
 
     step(1)
     step(1)
-    step(1)
+    // step(1)
+    print(s"t: ${t} io.field0: ${peek(c.io.Out(0).bits.data)} \n")
     // }
 
 
@@ -55,7 +56,7 @@ class FPDivNodeTester(c: FPDivSqrtNode) extends PeekPokeTester(c) {
 class FPDivNodeTests extends  FlatSpec with Matchers {
   implicit val p = new WithAccelConfig ++ new WithTestConfig
   it should "FPDivSqrt Node tester" in {
-    chisel3.iotesters.Driver(() => new FPDivSqrtNode(NumOuts=1,ID=1,RouteID=0,opCode = "SQRT")(t = FType.S)) { c =>
+    chisel3.iotesters.Driver(() => new FPDivSqrtNode(NumOuts=1,ID=1,RouteID=0,opCode = "fdiv")(t = FType.S)) { c =>
       new FPDivNodeTester(c)
     } should be(true)
   }

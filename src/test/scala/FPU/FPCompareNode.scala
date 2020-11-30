@@ -20,11 +20,11 @@ class FPCompareNodeTester(df: FPCompareNode)
                   (implicit p: Parameters) extends PeekPokeTester(df)  {
 
 
-  poke(df.io.LeftIO.bits.data, 0x40000000.U)
+  poke(df.io.LeftIO.bits.data, 0x40800000.U)
   poke(df.io.LeftIO.valid, false.B)
   poke(df.io.LeftIO.bits.predicate, false.B)
 
-  poke(df.io.RightIO.bits.data, 0x40800000.U)
+  poke(df.io.RightIO.bits.data, 0x40000000.U)
   poke(df.io.RightIO.valid, false.B)
   poke(df.io.RightIO.bits.predicate, false.B)
 

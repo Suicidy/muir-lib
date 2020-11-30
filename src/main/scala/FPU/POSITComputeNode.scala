@@ -1,15 +1,15 @@
-package dandelion.node
+package dandelion.posit
 
 import chisel3._
 import chisel3.util._
-import chisel3.Module
 import dandelion.interfaces._
-import util._
 import chipsalliance.rocketchip.config._
 import dandelion.config._
+import util._
+import posit._
 
 
-class ComputeNodeIO(NumOuts: Int)
+class PositComputeNodeIO(NumOuts: Int)
                    (implicit p: Parameters)
   extends HandShakingIONPS(NumOuts)(new DataBundle) {
   // LeftIO: Left input data for computation
@@ -18,24 +18,36 @@ class ComputeNodeIO(NumOuts: Int)
   // RightIO: Right input data for computation
   val RightIO = Flipped(Decoupled(new DataBundle()))
 
-  override def cloneType = new ComputeNodeIO(NumOuts).asInstanceOf[this.type]
+  override def cloneType = new PositComputeNodeIO(NumOuts).asInstanceOf[this.type]
 
 }
 
-class ComputeNode(NumOuts: Int, ID: Int, opCode: String)
-                 (sign: Boolean, Debug: Boolean = false)
+
+/**
+ * [PositComputeNode description]
+ */
+class PositComputeNode(NumOuts: Int, ID: Int, opCode: String)
                  (implicit p: Parameters,
                   name: sourcecode.Name,
                   file: sourcecode.File)
   extends HandShakingNPS(NumOuts, ID)(new DataBundle())(p) {
-  override lazy val io = IO(new ComputeNodeIO(NumOuts))
+  override lazy val io = IO(new PositComputeNodeIO(NumOuts))
+
 
   // Printf debugging
   val node_name = name.value
   val module_name = file.value.split("/").tail.last.split("\\.").head.capitalize
 
   override val printfSigil = "[" + module_name + "] " + node_name + ": " + ID + " "
+  //  override val printfSigil = "Node (COMP - " + opCode + ") ID: " + ID + " "
+
   val (cycleCount, _) = Counter(true.B, 32 * 1024)
+
+   /*===========================================*
+   *            Function Unit                      *
+   *===========================================*/
+ 
+  val PositU = Module (new PositALU(16, 2, opCode))
 
   /*===========================================*
    *            Registers                      *
@@ -48,25 +60,26 @@ class ComputeNode(NumOuts: Int, ID: Int, opCode: String)
   val right_R = RegInit(DataBundle.default)
   val right_valid_R = RegInit(false.B)
 
-  //Instantiate ALU with selected code
-  val FU = Module(new UALU(xlen, opCode, issign = sign))
-
+  //Output register
   val s_IDLE :: s_COMPUTE :: Nil = Enum(2)
   val state = RegInit(s_IDLE)
 
 
-  //Output register
-  val out_data_R = RegNext(Mux(enable_R.control, FU.io.out, 0.U), init = 0.U)
+  val out_data_R = RegNext(Mux(enable_R.control, PositU.io.out, 0.U), init = 0.U)
+
+
   val predicate = Mux(enable_valid_R, enable_R.control ,io.enable.bits.control)
+
   val taskID = Mux(enable_valid_R, enable_R.taskID ,io.enable.bits.taskID)
+
 
   /*===============================================*
    *            Latch inputs. Wire up output       *
    *===============================================*/
 
-  FU.io.in1 := left_R.data
-  FU.io.in2 := right_R.data
-
+  PositU.io.in1 := left_R.data
+  PositU.io.in2 := right_R.data
+  
   io.LeftIO.ready := ~left_valid_R
   when(io.LeftIO.fire()) {
     left_R <> io.LeftIO.bits
@@ -80,46 +93,32 @@ class ComputeNode(NumOuts: Int, ID: Int, opCode: String)
   }
 
 
-  // Wire up Outputs
-  // The taskID's should be identical except in the case
-  // when one input is tied to a constant.  In that case
-  // the taskID will be zero.  Logical OR'ing the IDs
-  // Should produce a valid ID in either case regardless of
-  // which input is constant.
   io.Out.foreach(_.bits := DataBundle(out_data_R, taskID, predicate))
-
   /*============================================*
    *            State Machine                   *
    *============================================*/
   switch(state) {
     is(s_IDLE) {
-      when(enable_valid_R && left_valid_R && right_valid_R) {
-        ValidOut()
-        io.Out.foreach(_.bits := DataBundle(FU.io.out, taskID, predicate))
-        io.Out.foreach(_.valid := true.B)
-        left_valid_R := false.B
-        right_valid_R := false.B
-        state := s_COMPUTE
-        if (log) {
-          printf("[LOG] " + "[" + module_name + "] " + "[TID->%d] [COMPUTE] " +
-            node_name + ": Output fired @ %d, Value: %d (%d + %d)\n", taskID, cycleCount, FU.io.out, left_R.data, right_R.data)
+      when(enable_valid_R) {
+        when(left_valid_R && right_valid_R) {
+          ValidOut()
+          io.Out.foreach(_.bits := DataBundle(PositU.io.out, taskID, predicate))
+          io.Out.map(_.valid) foreach(_ := true.B)
+          left_valid_R := false.B
+          right_valid_R := false.B
+          state := s_COMPUTE
         }
       }
     }
     is(s_COMPUTE) {
       when(IsOutReady()) {
         // Reset data
-
         out_data_R := 0.U
-
         //Reset state
         state := s_IDLE
         Reset()
-
-
       }
     }
   }
 
 }
-
