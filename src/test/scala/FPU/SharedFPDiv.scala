@@ -10,19 +10,22 @@ import dandelion.config._
 
 class SharedFPUTests(c: SharedFPU)(implicit p: Parameters) extends PeekPokeTester(c) {
 
+  poke(c.io.InData(0).valid, 0.U)
   poke(c.io.InData(0).bits.RouteID, 0.U)
   poke(c.io.InData(1).bits.RouteID, 1.U)
   poke(c.io.InData(0).bits.data("field0").data, 0x42800000.U)
   poke(c.io.InData(0).bits.data("field1").data, 0x41800000.U)
   poke(c.io.InData(0).bits.data("field2").data, 0.U)
+  step(1)
   poke(c.io.InData(0).valid, 1.U)
-  // poke(c.io.InData(1).valid, 0.U)
-  poke(c.io.InData(1).bits.data("field0").data, 0x42800000.U)
-  poke(c.io.InData(1).bits.data("field1").data, 0x42800000.U)
-  poke(c.io.InData(1).bits.data("field2").data, 0.U)
-  poke(c.io.InData(1).valid, 1.U)
+  step(1)
+  poke(c.io.InData(0).valid, 0.U)
+  // poke(c.io.InData(1).bits.data("field0").data, 0x42800000.U)
+  // poke(c.io.InData(1).bits.data("field1").data, 0x42800000.U)
+  // poke(c.io.InData(1).bits.data("field2").data, 0.U)
+  // poke(c.io.InData(1).valid, 1.U)
 
-  for( i <- 0 until 100){
+  for( i <- 0 until 150){
     print(s"${peek(c.io.OutData(0).data)}  ${peek(c.io.OutData(0).valid)}\n")
     print(s"${peek(c.io.OutData(1).data)}  ${peek(c.io.OutData(1).valid)}\n")
 

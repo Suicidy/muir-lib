@@ -12,7 +12,7 @@ import chipsalliance.rocketchip.config._
 import dandelion.interfaces._
 import util._
 import dandelion.node._
-import posit.{PositE, PositLE, PositL}
+import posit.{PositE, PositL}
 
 object PositCmpOpCode {
   val Less = 1
@@ -88,43 +88,50 @@ class PositCompareNode(NumOuts: Int, ID: Int, opCode: String)
   /*===============================================*
    *            Latch inputs. Wire up output       *
    *===============================================*/
-  val mantisa = 3
-  val posit_bit = 32
+  val posit_bit = xlen
 
 
   PositCmpOpCode.opMap(opCode) match {
     case PositCmpOpCode.Less => {
-      val PositLess = Module(new PositL(mantisa, posit_bit))
+      val PositLess = Module(new PositL(posit_bit))
       PositLess.io.i_bits_1 := left_R.data
       PositLess.io.i_bits_2 := right_R.data
       out_data_R.data := PositLess.io.o_result
     }
     case PositCmpOpCode.LessE => {
-      val PositLessE = Module(new PositLE(mantisa, posit_bit))
-      PositLessE.io.i_bits_1 := left_R.data
-      PositLessE.io.i_bits_2 := right_R.data
-      out_data_R.data := PositLessE.io.o_result
+      val PositLess = Module(new PositL(posit_bit))
+      PositLess.io.i_bits_1 := left_R.data
+      PositLess.io.i_bits_2 := right_R.data
+
+      val PositEqual = Module(new PositE(posit_bit))
+      PositEqual.io.i_bits_1 := left_R.data
+      PositEqual.io.i_bits_2 := right_R.data
+      out_data_R.data := PositEqual.io.o_result | PositLess.io.o_result
     }
     case PositCmpOpCode.Great => {
-      val PositLessE = Module(new PositLE(mantisa, posit_bit))
-      PositLessE.io.i_bits_1 := left_R.data
-      PositLessE.io.i_bits_2 := right_R.data
-      out_data_R.data := !PositLessE.io.o_result
+      val PositLess = Module(new PositL(posit_bit))
+      PositLess.io.i_bits_1 := left_R.data
+      PositLess.io.i_bits_2 := right_R.data
+
+      val PositEqual = Module(new PositE(posit_bit))
+      PositEqual.io.i_bits_1 := left_R.data
+      PositEqual.io.i_bits_2 := right_R.data
+      out_data_R.data := !(PositEqual.io.o_result | PositLess.io.o_result)
     }
     case PositCmpOpCode.GreatE => {
-      val PositLess = Module(new PositL(mantisa, posit_bit))
+      val PositLess = Module(new PositL(posit_bit))
       PositLess.io.i_bits_1 := left_R.data
       PositLess.io.i_bits_2 := right_R.data
       out_data_R.data := !PositLess.io.o_result
     }
     case PositCmpOpCode.Equal => {
-      val PositEqual = Module(new PositE(mantisa, posit_bit))
+      val PositEqual = Module(new PositE(posit_bit))
       PositEqual.io.i_bits_1 := left_R.data
       PositEqual.io.i_bits_2 := right_R.data
       out_data_R.data := PositEqual.io.o_result
     }
     case PositCmpOpCode.NEqual => {
-      val PositEqual = Module(new PositE(mantisa, posit_bit))
+      val PositEqual = Module(new PositE(posit_bit))
       PositEqual.io.i_bits_1 := left_R.data
       PositEqual.io.i_bits_2 := right_R.data
       out_data_R.data := !PositEqual.io.o_result

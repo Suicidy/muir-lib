@@ -53,7 +53,7 @@ class Core_edited_posit(cNum : Int, sNum: Int)(implicit p: Parameters) extends C
   io.ready := (state === sIdle)
 
   // Dataflow
-  val mainDataflow = Module(new bgemmRoot_positDF(PtrsIn = List(32,32,32), ValsIn = List(), Returns = List(), NumChild = 3))
+  val mainDataflow = Module(new bgemmRoot_positDF(PtrsIn = List(32,32,32), ValsIn = List(), Returns = List(), NumChild = 4))
 
   mainDataflow.io.in.bits.enable.taskID := 0.U
   mainDataflow.io.in.bits.enable.control := true.B

@@ -6,7 +6,7 @@ import dandelion.accel._
 import dandelion.memory._
 import dandelion.config._
 import dandelion.concurrent._
-class bgemmRootDF(PtrsIn : Seq[Int] = List (32, 32, 32), ValsIn : Seq[Int] = List(), Returns: Seq[Int] = List(), NumChild: Int = 1)
+class bgemmRootDF(PtrsIn : Seq[Int] = List (16, 16, 16), ValsIn : Seq[Int] = List(), Returns: Seq[Int] = List(), NumChild: Int = 1)
                   (implicit p: Parameters) extends DandelionAccelDCRModule(PtrsIn, ValsIn, Returns) {
 
 
@@ -24,16 +24,16 @@ class bgemmRootDF(PtrsIn : Seq[Int] = List (32, 32, 32), ValsIn : Seq[Int] = Lis
   val memory_arbiter = Module(new MemArbiter(NumTiles+1))
 
   val cilk_for_tiles = for (i <- 0 until NumTiles) yield {
-    val bgemm_detach1 = Module(new bgemm_detach1DF(PtrsIn = List(32, 32, 32), ValsIn = List(32, 32, 32), Returns = List()))
+    val bgemm_detach1 = Module(new bgemm_detach1DF(PtrsIn = List(16, 16, 16), ValsIn = List(16, 16, 16), Returns = List()))
     bgemm_detach1
   }
 
   /**
     * Kernel Modules
     */
-  val bgemm =  Module(new bgemmDF(PtrsIn = List(32, 32, 32), ValsIn = List(), Returns = List()))
+  val bgemm =  Module(new bgemmDF(PtrsIn = List(16, 16, 16), ValsIn = List(), Returns = List()))
 
-  val TC = Module(new TaskController(List(32, 32, 32, 32, 32, 32), List(), 1, numChild = NumTiles))
+  val TC = Module(new TaskController(List(16, 16, 16, 16, 16, 16), List(), 1, numChild = NumTiles))
 
     // Merge the memory interfaces and connect to the stack memory
   for (i <- 0 until NumTiles) {

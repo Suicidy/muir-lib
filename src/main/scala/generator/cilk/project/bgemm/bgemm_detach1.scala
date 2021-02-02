@@ -24,7 +24,7 @@ import regfile._
 import util._
 
 
-class bgemm_detach1DF(PtrsIn: Seq[Int] = List(32, 32, 32), ValsIn: Seq[Int] = List(32, 32, 32), Returns: Seq[Int] = List())
+class bgemm_detach1DF(PtrsIn: Seq[Int] = List(16, 16, 16), ValsIn: Seq[Int] = List(16, 16, 16), Returns: Seq[Int] = List())
 			(implicit p: Parameters) extends DandelionAccelDCRModule(PtrsIn, ValsIn, Returns){
 
 
@@ -35,7 +35,7 @@ class bgemm_detach1DF(PtrsIn: Seq[Int] = List(32, 32, 32), ValsIn: Seq[Int] = Li
   //Cache
   // val mem_ctrl_cache = Module(new CacheMemoryEngine(ID = 0, NumRead = 3, NumWrite = 1))
 
-  val MemCtrl = Module(new UnifiedController(ID = 0, Size = 32, NReads = 3, NWrites = 1)
+  val MemCtrl = Module(new UnifiedController(ID = 0, Size = 16, NReads = 3, NWrites = 1)
   (WControl = new WriteMemoryController(NumOps = 1, BaseSize = 2, NumEntries = 2))
   (RControl = new ReadMemoryController(NumOps = 3, BaseSize = 2, NumEntries = 2))
   (RWArbiter = new ReadWriteArbiter()))
@@ -104,11 +104,11 @@ class bgemm_detach1DF(PtrsIn: Seq[Int] = List(32, 32, 32), ValsIn: Seq[Int] = Li
   val binaryOp_9 = Module(new ComputeNode(NumOuts = 1, ID = 9, opCode = "add")(sign = false, Debug = false))
 
   //  %6 = getelementptr inbounds float, float* %m1.in, i32 %5, !UID !12
-  val Gep_10 = Module(new GepNode(NumIns = 1, NumOuts = 1, ID = 10)(ElementSize = 4, ArraySize = List()))
+  val Gep_10 = Module(new GepNode(NumIns = 1, NumOuts = 1, ID = 10)(ElementSize = 2, ArraySize = List()))
 
   //  %7 = load float, float* %6, align 4, !tbaa !13, !UID !17
   // val ld_11 = Module(new UnTypLoadCache(NumPredOps = 0, NumSuccOps = 0, NumOuts = 1, ID = 11, RouteID = 0))
-  val ld_11 = Module(new UnTypLoad(Typ= MT_W, NumPredOps = 0, NumSuccOps = 0, NumOuts = 1, ID = 11, RouteID = 0))
+  val ld_11 = Module(new UnTypLoad(Typ= MT_H, NumPredOps = 0, NumSuccOps = 0, NumOuts = 1, ID = 11, RouteID = 0))
 
   //  br label %my_for.body20, !UID !18, !BB_UID !19
   val br_12 = Module(new UBranchNode(ID = 12))
@@ -123,11 +123,11 @@ class bgemm_detach1DF(PtrsIn: Seq[Int] = List(32, 32, 32), ValsIn: Seq[Int] = Li
   val binaryOp_16 = Module(new ComputeNode(NumOuts = 1, ID = 16, opCode = "add")(sign = false, Debug = false))
 
   //  %11 = getelementptr inbounds float, float* %m2.in, i32 %10, !UID !23
-  val Gep_17 = Module(new GepNode(NumIns = 1, NumOuts = 1, ID = 17)(ElementSize = 4, ArraySize = List()))
+  val Gep_17 = Module(new GepNode(NumIns = 1, NumOuts = 1, ID = 17)(ElementSize = 2, ArraySize = List()))
 
   //  %12 = load float, float* %11, align 4, !tbaa !13, !UID !24
   // val ld_18 = Module(new UnTypLoadCache(NumPredOps = 0, NumSuccOps = 0, NumOuts = 1, ID = 18, RouteID = 1))
-  val ld_18 = Module(new UnTypLoad(Typ= MT_W, NumPredOps = 0, NumSuccOps = 0, NumOuts = 1, ID = 18, RouteID = 1))
+  val ld_18 = Module(new UnTypLoad(Typ= MT_H, NumPredOps = 0, NumSuccOps = 0, NumOuts = 1, ID = 18, RouteID = 1))
 
   //  %13 = fmul float %7, %12, !UID !25
   val FP_19 = Module(new FPComputeNode(NumOuts = 1, ID = 19, opCode = "fmul")(fType))
@@ -139,18 +139,18 @@ class bgemm_detach1DF(PtrsIn: Seq[Int] = List(32, 32, 32), ValsIn: Seq[Int] = Li
   val binaryOp_21 = Module(new ComputeNode(NumOuts = 1, ID = 21, opCode = "add")(sign = false, Debug = false))
 
   //  %16 = getelementptr inbounds float, float* %prod.in, i32 %15, !UID !28
-  val Gep_22 = Module(new GepNode(NumIns = 1, NumOuts = 2, ID = 22)(ElementSize = 4, ArraySize = List()))
+  val Gep_22 = Module(new GepNode(NumIns = 1, NumOuts = 2, ID = 22)(ElementSize = 2, ArraySize = List()))
 
   //  %17 = load float, float* %16, align 4, !tbaa !13, !UID !29
   // val ld_23 = Module(new UnTypLoadCache(NumPredOps = 0, NumSuccOps = 0, NumOuts = 1, ID = 23, RouteID = 2))
-  val ld_23 = Module(new UnTypLoad(Typ= MT_W, NumPredOps = 0, NumSuccOps = 0, NumOuts = 1, ID = 23, RouteID = 2))
+  val ld_23 = Module(new UnTypLoad(Typ= MT_H, NumPredOps = 0, NumSuccOps = 0, NumOuts = 1, ID = 23, RouteID = 2))
 
   //  %18 = fadd float %17, %13, !UID !30
   val FP_24 = Module(new FPComputeNode(NumOuts = 1, ID = 24, opCode = "fadd")(fType))
 
   //  store float %18, float* %16, align 4, !tbaa !13, !UID !31
   // val st_25 = Module(new UnTypStoreCache(NumPredOps = 0, NumSuccOps = 1, ID = 25, RouteID = 3))
-  val st_25 = Module(new UnTypStore(Typ= MT_W, NumPredOps = 0, NumSuccOps = 1, ID = 25, RouteID = 0))
+  val st_25 = Module(new UnTypStore(Typ= MT_H, NumPredOps = 0, NumSuccOps = 1, ID = 25, RouteID = 0))
 
   //  %19 = add nuw nsw i32 %8, 1, !UID !32
   val binaryOp_26 = Module(new ComputeNode(NumOuts = 2, ID = 26, opCode = "add")(sign = false, Debug = false))

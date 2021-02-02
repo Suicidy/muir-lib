@@ -46,8 +46,11 @@ class PositComputeNode(NumOuts: Int, ID: Int, opCode: String)
    /*===========================================*
    *            Function Unit                      *
    *===========================================*/
- 
-  val PositU = Module (new PositALU(16, 2, opCode))
+  val posit_bit = xlen
+  val es = if (xlen == 32) 3 else 2;
+
+
+  val PositU = Module (new PositALU(posit_bit, es, opCode))
 
   /*===========================================*
    *            Registers                      *

@@ -62,12 +62,12 @@ abstract class SimpleRegIO(cNum: Int, sNum: Int)(implicit val p: Parameters) ext
 
 class SimpleReg(cNum: Int, sNum: Int)(implicit p: Parameters) extends SimpleRegIO(cNum, sNum)(p) {
 
-  val numCfg = if (xlen == 32) 2 else 1;
+  val numCfg = if (xlen == 32) 2 else 2;
   val ctrlBank = RegInit(VecInit(Seq.fill(cNum + numCfg)(VecInit(Seq.fill(xlen / 8)(0.U(8.W))))))
   val statBank = RegInit(VecInit(Seq.fill(sNum + numCfg)(0.U(xlen.W))))
-  val wordSelBits = log2Ceil(xlen / 8)
-  val regSelBits = log2Ceil(math.max(cNum + numCfg, sNum + numCfg))
-  val bankSelBit = 11
+  val wordSelBits = log2Ceil(ylen / 8) //1 //2
+  val regSelBits = log2Ceil(math.max(cNum + numCfg, sNum + numCfg)) //2 //3
+  val bankSelBit = 11 //1000 0000 0000
 
   // register for write address channel ready signal
   val writeAddrReadyReg = RegInit(false.B)
@@ -86,11 +86,11 @@ class SimpleReg(cNum: Int, sNum: Int)(implicit p: Parameters) extends SimpleRegI
 
   // register bank write
   val doWrite = writeReadyReg && io.nasti.w.valid && writeAddrReadyReg && io.nasti.aw.valid
-  val writeRegSelect = writeAddrReg(regSelBits + wordSelBits - 1, wordSelBits)
-  val writeBankSelect = writeAddrReg(bankSelBit)
+  val writeRegSelect = writeAddrReg(regSelBits + wordSelBits - 1, wordSelBits) //(2,1) //(4,2)
+  val writeBankSelect = writeAddrReg(bankSelBit) //ctrl or stat
 
   when(writeBankSelect === 0.U && doWrite) {
-    for (i <- 0 until xlen / 8) {
+    for (i <- 0 until ylen / 8) { //(0 -> 1)
       when(io.nasti.w.bits.strb(i) === 1.U) {
         ctrlBank(writeRegSelect)(i) := io.nasti.w.bits.data(8 * i + 7, 8 * i)
       }
@@ -101,7 +101,7 @@ class SimpleReg(cNum: Int, sNum: Int)(implicit p: Parameters) extends SimpleRegI
   for (i <- 0 until cNum) {
     io.ctrl(i) := Cat(ctrlBank(i + numCfg).reverse)
   }
-  io.start := ctrlBank(0)(0)(0);
+  io.start := ctrlBank(0)(0)(0); // i + byte + bit
   io.init := ctrlBank(0)(0)(1);
 
   // write response generation
@@ -135,16 +135,16 @@ class SimpleReg(cNum: Int, sNum: Int)(implicit p: Parameters) extends SimpleRegI
 
   statBank(0) := Cat(io.ready, io.done)
   for (i <- 0 until sNum) {
-    statBank(i + numCfg) := io.stat(i)
+    statBank(i + numCfg) := io.stat(i) //statBank(1) -> statBank(2)
   }
 
   // register bank read
-  val readRegSelect = readAddrReg(regSelBits + wordSelBits - 1, wordSelBits)
+  val readRegSelect = readAddrReg(regSelBits + wordSelBits - 1, wordSelBits) //(2,1) //(4,2)
   val readBankSelect = readAddrReg(bankSelBit)
   val outputReg = RegInit(0.U(xlen.W))
-  when(readBankSelect === 0.U) {
+  when(readBankSelect === 0.U) { //ctrl
     outputReg := Cat(ctrlBank(readRegSelect).reverse)
-  }.otherwise {
+  }.otherwise { //stat
     outputReg := statBank(readRegSelect)
   }
   io.nasti.r.bits.data := outputReg

@@ -79,7 +79,7 @@ class Core_edited(cNum : Int, sNum: Int)(implicit p: Parameters) extends CoreT_e
   io.ready := (state === sIdle)
 
   // Dataflow
-  val mainDataflow = Module(new bgemmRootDF(PtrsIn = List(32,32,32), ValsIn = List(), Returns = List(), NumChild = 4))
+  val mainDataflow = Module(new bgemmRootDF(PtrsIn = List(16,16,16), ValsIn = List(), Returns = List(), NumChild = 4))
 
   mainDataflow.io.in.bits.enable.taskID := 0.U
   mainDataflow.io.in.bits.enable.control := true.B
@@ -112,7 +112,7 @@ class Core_edited(cNum : Int, sNum: Int)(implicit p: Parameters) extends CoreT_e
   switch(state) {
    // Idle
     is(sIdle) {  
-      when(io.start && mainDataflow.io.in.ready){
+      when(io.start && mainDataflow.io.in.ready){ // in.ready is not ready after init
         counter := 0.U
         counter2 := 0.U
         inValid := true.B
@@ -122,8 +122,8 @@ class Core_edited(cNum : Int, sNum: Int)(implicit p: Parameters) extends CoreT_e
     // Compute
     is(sCompute) {
       //Count Clock Cycle
-      counter := Mux(counter === "hffffffff".U, 0.U, counter + 1.U)
-      counter2 := Mux(counter === "hffffffff".U, counter2 + 1.U , counter2)
+      counter := Mux(counter === "hffff".U, 0.U, counter + 1.U)
+      counter2 := Mux(counter === "hffff".U, counter2 + 1.U , counter2)
       inValid := false.B
 
       // Result is valid only when receive valid signal

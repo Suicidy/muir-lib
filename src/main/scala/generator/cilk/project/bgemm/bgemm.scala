@@ -36,7 +36,7 @@ abstract class bgemmDFIO[T <: Data](val PtrsIn: Seq[Int],
     // val call_9_in = Flipped(Decoupled(new Call(List())))
 
     // val call_27_out_io = Decoupled(new CallDCR(ptrsArgTypes = List(32,32,32), valsArgTypes = List(32,32,32)))
-    val call_27_out_io = Decoupled(new Call(List(32, 32, 32, 32, 32, 32)))
+    val call_27_out_io = Decoupled(new Call(List(16, 16, 16, 16, 16, 16)))
     val call_27_in_io = Flipped(Decoupled(new Call(List())))
 
     val MemResp = Flipped(Valid(new MemResp))
@@ -49,7 +49,7 @@ abstract class bgemmDFIO[T <: Data](val PtrsIn: Seq[Int],
 
 // class bgemmDF(PtrsIn: Seq[Int] = List(32, 32, 32), ValsIn: Seq[Int] = List(), Returns: Seq[Int] = List())
 // 			(implicit p: Parameters) extends DandelionAccelDCRModule(PtrsIn, ValsIn, Returns){
-  class bgemmDF(PtrsIn: Seq[Int] = List(32, 32, 32), ValsIn: Seq[Int] = List(), Returns: Seq[Int] = List())
+  class bgemmDF(PtrsIn: Seq[Int] = List(16, 16, 16), ValsIn: Seq[Int] = List(), Returns: Seq[Int] = List())
 			(implicit p: Parameters) extends bgemmDFIO(PtrsIn, ValsIn, Returns){
   /**
     * Call Interfaces
@@ -168,7 +168,7 @@ abstract class bgemmDFIO[T <: Data](val PtrsIn: Seq[Int],
   
   // addnode
   //  call 27
-  val call_27_out = Module(new CallOutNode(ID = 27, NumSuccOps = 0, argTypes = List(32,32,32,32,32,32)))
+  val call_27_out = Module(new CallOutNode(ID = 27, NumSuccOps = 0, argTypes = List(16,16,16,16,16,16)))
 
   val call_27_in = Module(new CallInNode(ID = 27, argTypes = List()))
 
